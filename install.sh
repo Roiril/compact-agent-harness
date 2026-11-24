@@ -7,6 +7,13 @@ put "$src/AGENTS.md" "$dst/AGENTS.md"
 if [ -e "$dst/CLAUDE.md" ]; then
   grep -qxF '@AGENTS.md' "$dst/CLAUDE.md" || { printf '\n@AGENTS.md\n' >> "$dst/CLAUDE.md"; echo "link $dst/CLAUDE.md"; }
 else put "$src/CLAUDE.md" "$dst/CLAUDE.md"; fi
-for d in "$src"/skills/*/; do n="$(basename "$d")"
-  put "$d/SKILL.md" "$dst/.claude/skills/$n/SKILL.md"; put "$d/SKILL.md" "$dst/.agents/skills/$n/SKILL.md"; done
+for d in "$src"/skills/*/; do
+  n="$(basename "$d")"
+  for f in "$d"SKILL.md "$d"references/*; do
+    [ -f "$f" ] || continue
+    r="${f#"$d"}"
+    put "$f" "$dst/.claude/skills/$n/$r"; put "$f" "$dst/.agents/skills/$n/$r"
+  done
+done
 put "$src/agents/code-auditor.md" "$dst/.claude/agents/code-auditor.md"
+put "$src/tools/contract-check.mjs" "$dst/.claude/tools/contract-check.mjs"
