@@ -1,4 +1,4 @@
-// 契約表の「確定」行が、検査名の文字列に出てくるかを調べる。使い方: node contract-check.mjs [--contract] [プロジェクト]
+// 契約表の「確定」行が、検査名の文字列に出てくるかを調べる。使い方: node tests/contract-check.mjs [--contract] [プロジェクト]
 // --contract は表だけを調べる（検査をまだ書いていない段階用）
 // 中身の正しさは保証しない。漏れと、根拠の無い確定を見つけるための道具。
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
@@ -27,13 +27,17 @@ const grounded = why => {
 };
 
 const skip = new Set(['node_modules', '.git', '.claude', '.agents', 'docs', 'dist', 'build', 'vendor', '.venv']);
-const tests = [];
+const tests = [], selfMade = [];
 (function walk(dir, inTest) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (skip.has(e.name)) continue;
+    if (skip.has(e.name) || /^(check-kit|contract-check)\.mjs$/.test(e.name)) continue;
     const p = join(dir, e.name), t = inTest || /test|spec|check/i.test(e.name);
     if (e.isDirectory()) walk(p, t);
-    else if (t && /\.(m?[jt]sx?|cjs|py|go|rb|java|kt|rs|php|sh|cs)$/.test(e.name)) tests.push(readFileSync(p, 'utf8'));
+    else if (t && /\.(m?[jt]sx?|cjs|py|go|rb|java|kt|rs|php|sh|cs)$/.test(e.name)) {
+      const body = readFileSync(p, 'utf8');
+      tests.push(body);
+      if (/acceptance\.check\.mjs$/.test(e.name) && !/from ['"].*check-kit\.mjs['"]/.test(body)) selfMade.push(p);
+    }
   }
 })(root, false);
 
@@ -50,10 +54,12 @@ report('ID の重複', ids.filter((x, i) => ids.indexOf(x) !== i));
 report('確定の根拠が原文の引用でもファイルでもない（未確定に戻す）', rows.filter(r => r.state === '確定' && !grounded(r.why)).map(r => r.id));
 report('状態の書き方が違う', rows.filter(r => !r.state).map(r => r.id));
 if (!only) report('検査が無い', rows.filter(r => r.state === '確定' && !found.has(r.id)).map(r => r.id));
+report('check-kit を使っていない検査（起動や比較を自作しない）', selfMade);
 report('契約に無い ID', [...found].filter(x => !ids.includes(x)));
 for (const k of ['異常', '境界']) if (!rows.some(r => r.kind === k)) ng.push(`${k}の行が 0 件`);
 
 const n = s => rows.filter(r => r.state === s).length;
 console.log(`確定 ${n('確定')} / 仮定 ${n('仮定')} / 未確定 ${n('未確定')} / 検査あり ${ids.filter(x => found.has(x)).length}`);
 console.log(ng.length ? ng.map(x => 'NG ' + x).join('\n') : 'OK');
+console.log(`終了コード ${ng.length ? 1 : 0}`);
 process.exit(ng.length ? 1 : 0);
