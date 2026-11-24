@@ -1,1 +1,1 @@
-{ "name": "compact-agent-harness", "owner": { "name": "Roiril" }, "plugins": [ { "name": "compact-harness", "source": "./", "description": "契約の整理、計画、API 検証、自己レビュー、提出前確認" } ] }
+{ "name": "compact-agent-harness", "owner": { "name": "Roiril" }, "plugins": [ { "name": "compact-harness", "source": "./", "description": "仕様の整理、計画、API 検証、自己レビュー、提出前確認" } ] }

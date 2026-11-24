@@ -1,6 +1,6 @@
-// 契約表の「確定」行が、検査名の文字列に出てくるかを調べる。使い方: node tests/contract-check.mjs [--contract] [プロジェクト]
-// --contract は表だけを調べる（検査をまだ書いていない段階用）
-// 中身の正しさは保証しない。漏れと、根拠の無い確定を見つけるための道具。
+// 仕様の表で「確定」にした行の ID が、検査名の文字列に出てくるかを調べる。使い方: node tests/contract-check.mjs [--contract] [プロジェクト]
+// --contract を付けると表だけを調べる（検査をまだ書いていない段階で使う）
+// 中身の正しさは保証しない。検査の漏れと、根拠の無い確定を見つけるための道具。
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -49,13 +49,13 @@ for (const t of tests) for (const line of t.split('\n')) {
 
 const ids = rows.map(r => r.id), ng = [];
 const report = (label, list) => { if (list.length) ng.push(`${label}: ${[...new Set(list)].join(' ')}`); };
-if (!rows.length) ng.push('契約の行が 0 件');
+if (!rows.length) ng.push('仕様の表の行が 0 件');
 report('ID の重複', ids.filter((x, i) => ids.indexOf(x) !== i));
 report('確定の根拠が原文の引用でもファイルでもない（未確定に戻す）', rows.filter(r => r.state === '確定' && !grounded(r.why)).map(r => r.id));
 report('状態の書き方が違う', rows.filter(r => !r.state).map(r => r.id));
 if (!only) report('検査が無い', rows.filter(r => r.state === '確定' && !found.has(r.id)).map(r => r.id));
 report('check-kit を使っていない検査（起動や比較を自作しない）', selfMade);
-report('契約に無い ID', [...found].filter(x => !ids.includes(x)));
+report('仕様の表に無い ID', [...found].filter(x => !ids.includes(x)));
 for (const k of ['異常', '境界']) if (!rows.some(r => r.kind === k)) ng.push(`${k}の行が 0 件`);
 
 const n = s => rows.filter(r => r.state === s).length;

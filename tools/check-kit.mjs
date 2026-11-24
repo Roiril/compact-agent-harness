@@ -1,7 +1,7 @@
 // 受け入れ検査の部品。起動、待機、後始末、判定を受け持つ。依存なし（Node 18 以上）。
 // 終了コード: 0 全部合格 / 1 期待と違う・検査の誤り / 2 起動や接続の問題（検査の中身は未確認）
-// --only C-03 でその検査だけ。--fake は、何を聞いても 418 を返す偽サーバーに当てる。合格した検査は「何も確かめていない」。
-// start を書くと、検査ごとにサーバーを起動し直す（前の検査のデータが残らない）。遅いなら fresh: false。
+// --only C-03 でその検査だけを実行する。--fake では、どの要求にも 418 を返す偽サーバーに対して実行する。合格した検査は「何も確かめていない」。
+// start を書くと、検査ごとにサーバーを起動し直す（前の検査のデータが残らない）。遅いなら fresh: false にする。
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { isDeepStrictEqual, inspect } from 'node:util';
