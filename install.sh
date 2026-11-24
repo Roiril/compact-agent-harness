@@ -16,4 +16,5 @@ for d in "$src"/skills/*/; do
   done
 done
 put "$src/agents/code-auditor.md" "$dst/.claude/agents/code-auditor.md"
-put "$src/tools/contract-check.mjs" "$dst/.claude/tools/contract-check.mjs"
+for t in contract-check check-kit; do put "$src/tools/$t.mjs" "$dst/.claude/tools/$t.mjs"; done
+put "$src/templates/settings.json" "$dst/.claude/settings.json"

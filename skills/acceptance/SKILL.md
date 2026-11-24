@@ -3,9 +3,21 @@ name: acceptance
 description: 実装の前に、契約表から受け入れ検査を書く。契約が固まった直後に使う。
 ---
 1. 実装は読まない。根拠は `docs/contract.md` だけ。確定の行を検査にし、未確定は書かない。仮定は名前に「仮定」と付ける。
-2. 検査名の文字列に契約 ID を入れる。例 `check('C-03 負数は拒否', ...)`。空の検査で ID を埋めない。
-3. 単独のコマンドで動く 1 ファイルにする（例 `tests/acceptance.check.mjs`）。`&`、`cd`、`sleep` をつながない。接続先は環境変数で変えられるようにし、既定は課題の指定先。
-4. 期待値は具体値で書く。計算で作る期待値は実装と同じ式を使わない。
-5. 例のほかに不変条件（合計が一致、順序を変えても同じ、2 回送っても壊れない等）を、契約から言えるものだけ足す。乱数は種を固定する。
-6. 失敗が 1 件でもあれば終了コード 1。実行して、未実装のため落ちることを見る。
-7. `node .claude/tools/contract-check.mjs` を実行し、漏れた ID を足す（プラグインで入れた場合は `${CLAUDE_PLUGIN_ROOT}/tools/` にある）。
+2. `.claude/tools/check-kit.mjs` を `tests/` にコピーして使う（プラグインで入れた場合は `${CLAUDE_PLUGIN_ROOT}/tools/`）。起動、待機、停止を自分で書かない。中身も読まない。使い方は次だけ。
+
+```js
+// tests/acceptance.check.mjs   実行: node tests/acceptance.check.mjs
+import { suite } from './check-kit.mjs';
+// Compose などで先に起動しておく場合は start を書かない
+const t = await suite({ base: 'http://localhost:8080', start: 'node server.js' });
+t.check('C-03 負数は拒否', async () => {
+  const r = await t.req('POST', '/items', { count: -1 });
+  t.eq(r.status, 400);
+});
+await t.done();
+```
+
+3. 検査名の文字列に契約 ID を入れる。期待値は具体値。計算で作るなら実装と同じ式を使わない。状態コードと本文の両方を見る。
+4. 各検査は自分で必要なデータを作る。順番に頼らない。例のほかに不変条件を、契約から言えるものだけ足す。乱数は種を固定する。
+5. `node tests/acceptance.check.mjs --fake` を実行する。終了コード 0（偽サーバーで全部落ちる）になるまで検査を直す。ここでは実装を作らない。
+6. `node .claude/tools/contract-check.mjs` を実行し、漏れた ID を足す。

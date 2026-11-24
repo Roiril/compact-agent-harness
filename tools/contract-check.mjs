@@ -1,9 +1,11 @@
-// 契約表の「確定」行が、検査名の文字列に出てくるかを調べる。使い方: node contract-check.mjs [プロジェクト]
+// 契約表の「確定」行が、検査名の文字列に出てくるかを調べる。使い方: node contract-check.mjs [--contract] [プロジェクト]
+// --contract は表だけを調べる（検査をまだ書いていない段階用）
 // 中身の正しさは保証しない。漏れを見つけるための道具。
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const root = process.argv[2] || '.';
+const args = process.argv.slice(2), only = args.includes('--contract');
+const root = args.find(a => !a.startsWith('--')) || '.';
 const file = join(root, 'docs/contract.md');
 if (!existsSync(file)) { console.log('NG docs/contract.md がありません'); process.exit(1); }
 
@@ -33,7 +35,7 @@ const report = (label, list) => { if (list.length) ng.push(`${label}: ${[...new 
 if (!rows.length) ng.push('契約の行が 0 件');
 report('ID の重複', ids.filter((x, i) => ids.indexOf(x) !== i));
 report('状態の書き方が違う', rows.filter(r => !r.state).map(r => r.id));
-report('検査が無い', rows.filter(r => r.state === '確定' && !found.has(r.id)).map(r => r.id));
+if (!only) report('検査が無い', rows.filter(r => r.state === '確定' && !found.has(r.id)).map(r => r.id));
 report('契約に無い ID', [...found].filter(x => !ids.includes(x)));
 for (const k of ['異常', '境界']) if (!rows.some(r => r.kind === k)) ng.push(`${k}の行が 0 件`);
 
